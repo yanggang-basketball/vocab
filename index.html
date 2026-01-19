@@ -4,32 +4,38 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0b1220">
-<title>中英词汇自测（一年级版）</title>
+<title>中英词汇自测</title>
 
 <style>
 :root{
-  --bg:#0b1220; --card:#111a2e; --muted:#9fb0d6;
-  --text:#eaf0ff; --border:#223255;
-  --ok:#35d07f; --bad:#ff5a6a;
+  --bg:#0b1220; --card:#111a2e; --text:#eaf0ff;
+  --muted:#9fb0d6; --ok:#35d07f; --bad:#ff5a6a;
 }
 *{box-sizing:border-box;}
 body{
   margin:0; background:var(--bg); color:var(--text);
   font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
 }
-.wrap{
-  max-width:720px;
-  margin:auto;
-  padding:env(safe-area-inset-top) 12px env(safe-area-inset-bottom);
-}
+.wrap{max-width:720px;margin:auto;padding:12px;}
 .card{
   background:var(--card);
   border-radius:18px;
   padding:18px;
   margin-bottom:14px;
 }
-h1{font-size:20px;margin:0 0 6px;}
-.sub{font-size:13px;color:var(--muted);}
+h1{margin:0;font-size:20px;}
+
+button,select{
+  width:100%;
+  margin-top:10px;
+  font-size:16px;
+  padding:14px;
+  border-radius:14px;
+  border:none;
+}
+button{background:#2b3f78;color:white;}
+button:active{opacity:.85;}
+select{background:#0b1220;color:var(--text);border:1px solid #223255;}
 
 .prompt{
   margin-top:16px;
@@ -43,120 +49,208 @@ h1{font-size:20px;margin:0 0 6px;}
   font-size:32px;
   font-weight:800;
 }
-.prompt:active{background:#1a2a52;}
-
 .answer{
+  display:none;
   margin-top:14px;
   text-align:center;
   font-size:26px;
   font-weight:700;
+  cursor:pointer;
+}
+.btn-know{background:#2f7d4c;}
+.btn-dont{background:#8a3a3a;}
+.btn-next{background:#2b3f78;}
+
+.notice{
+  background:#402c1a;
+  color:#ffd18b;
+  padding:12px;
+  border-radius:12px;
+  font-size:14px;
+  margin-bottom:10px;
   display:none;
-  cursor:pointer;
 }
-
-button{
-  width:100%;
-  margin-top:12px;
-  font-size:18px;
-  padding:16px;
-  border-radius:14px;
-  border:none;
-  cursor:pointer;
+.speed{
+  display:flex;
+  gap:10px;
+  margin-top:10px;
 }
-.btn-know{ background:#2f7d4c; color:white; }
-.btn-dont{ background:#8a3a3a; color:white; }
-.btn-next{ background:#2b3f78; color:white; }
-
-button:active{opacity:.85;}
+.speed button{flex:1;}
+.active{outline:2px solid #fff;}
 </style>
 </head>
 
 <body>
 <div class="wrap">
+
+  <!-- 微信提示 -->
+  <div class="notice" id="wxNotice">
+    ⚠️ 当前在微信中打开，朗读功能可能受限。<br>
+    建议右上角 “…” → 在浏览器中打开。
+  </div>
+
   <div class="card">
     <h1>中英词汇自测</h1>
-    <div class="sub">一年级 · 不用打字 · 点击朗读</div>
 
-    <select id="direction" style="width:100%;margin-top:10px;">
+    <!-- 语音解锁 -->
+    <button id="enableAudio">🔊 点击开启朗读</button>
+
+    <!-- 语速 -->
+    <div class="speed">
+      <button id="speedSlow">🐢 慢速</button>
+      <button id="speedNormal" class="active">🐇 正常</button>
+    </div>
+
+    <!-- 方向 -->
+    <select id="direction">
       <option value="en2zh">英 → 中</option>
       <option value="zh2en">中 → 英</option>
     </select>
 
+    <!-- 分类 -->
+    <select id="category">
+      <option value="all">全部</option>
+      <option value="fruit">水果</option>
+      <option value="color">颜色</option>
+      <option value="action">动作</option>
+      <option value="clothes">衣物</option>
+      <option value="person">人名</option>
+      <option value="time">时间</option>
+      <option value="object">物品 / 动物</option>
+    </select>
+
     <!-- 题目 -->
-    <div class="prompt" id="questionBox" title="点击朗读">
+    <div class="prompt" id="questionBox">
       <div class="v" id="question">—</div>
     </div>
 
     <!-- 答案 -->
-    <div class="answer" id="answerBox" title="点击朗读答案"></div>
+    <div class="answer" id="answerBox"></div>
 
-    <!-- 判断按钮 -->
-    <button class="btn-know" onclick="reveal(true)">我知道 👍</button>
-    <button class="btn-dont" onclick="reveal(false)">我不知道 🤔</button>
+    <button class="btn-know" onclick="reveal()">我知道 👍</button>
+    <button class="btn-dont" onclick="reveal()">我不知道 🤔</button>
     <button class="btn-next" onclick="next()">下一题 ▶</button>
   </div>
 </div>
 
 <script>
-const WORDS=[
-{en:"a banana",zh:"一根香蕉"},
-{en:"a peach",zh:"一个桃子"},
-{en:"a cherry",zh:"一颗樱桃"},
-{en:"a grape",zh:"一颗葡萄"},
-{en:"pink",zh:"粉色"},
-{en:"red",zh:"红色"},
-{en:"blue",zh:"蓝色"},
-{en:"green",zh:"绿色"},
-{en:"dance",zh:"跳舞"},
-{en:"sing",zh:"唱歌"},
-{en:"draw",zh:"画画"},
-{en:"cook",zh:"做饭"},
-{en:"dad",zh:"爸爸"},
-{en:"mum",zh:"妈妈"}
+const ALL_WORDS = [
+  {en:"a banana",zh:"一根香蕉",cat:"fruit"},
+  {en:"a peach",zh:"一个桃子",cat:"fruit"},
+  {en:"a cherry",zh:"一颗樱桃",cat:"fruit"},
+  {en:"a grape",zh:"一颗葡萄",cat:"fruit"},
+
+  {en:"pink",zh:"粉色",cat:"color"},
+  {en:"red",zh:"红色",cat:"color"},
+  {en:"blue",zh:"蓝色",cat:"color"},
+  {en:"green",zh:"绿色",cat:"color"},
+
+  {en:"dance",zh:"跳舞",cat:"action"},
+  {en:"sing",zh:"唱歌",cat:"action"},
+  {en:"draw",zh:"画画",cat:"action"},
+  {en:"cook",zh:"做饭",cat:"action"},
+
+  {en:"a coat",zh:"一件外套",cat:"clothes"},
+  {en:"a scarf",zh:"一条围巾",cat:"clothes"},
+  {en:"a beanie",zh:"一顶小便帽",cat:"clothes"},
+  {en:"a sweater",zh:"一件毛衣",cat:"clothes"},
+
+  {en:"Liu Tao",zh:"刘涛",cat:"person"},
+  {en:"Yang Ling",zh:"杨玲",cat:"person"},
+  {en:"Wang Bing",zh:"王兵",cat:"person"},
+  {en:"Su Hai",zh:"苏海",cat:"person"},
+  {en:"Miss Li",zh:"李老师（女）",cat:"person"},
+  {en:"Mr Green",zh:"格林先生",cat:"person"},
+
+  {en:"dad",zh:"爸爸",cat:"person"},
+  {en:"mum",zh:"妈妈",cat:"person"},
+
+  {en:"morning",zh:"早上",cat:"time"},
+  {en:"afternoon",zh:"下午",cat:"time"},
+  {en:"evening",zh:"晚上（傍晚）",cat:"time"},
+  {en:"night",zh:"夜晚（夜里）",cat:"time"},
+
+  {en:"a teddy",zh:"一只泰迪熊",cat:"object"},
+  {en:"a box",zh:"一个盒子",cat:"object"},
+  {en:"a bag",zh:"一个包",cat:"object"},
+  {en:"a puppy",zh:"一只小狗",cat:"object"}
 ];
 
-let i=0;
-const q=document.getElementById("question");
-const a=document.getElementById("answerBox");
-const dir=document.getElementById("direction");
+let words = [...ALL_WORDS];
+let i = 0;
+let audioEnabled = false;
+let rate = 1.0;
 
+const q = document.getElementById("question");
+const a = document.getElementById("answerBox");
+const dir = document.getElementById("direction");
+const catSel = document.getElementById("category");
+
+/* 微信检测 */
+if (/MicroMessenger/i.test(navigator.userAgent)) {
+  document.getElementById("wxNotice").style.display = "block";
+}
+
+/* 语音解锁 */
+document.getElementById("enableAudio").onclick = () => {
+  const u = new SpeechSynthesisUtterance("朗读已开启");
+  u.lang = "zh-CN";
+  speechSynthesis.speak(u);
+  audioEnabled = true;
+  document.getElementById("enableAudio").style.display = "none";
+};
+
+/* 语速 */
+document.getElementById("speedSlow").onclick = () => setRate(0.7, "speedSlow");
+document.getElementById("speedNormal").onclick = () => setRate(1.0, "speedNormal");
+
+function setRate(r, id){
+  rate = r;
+  document.querySelectorAll(".speed button").forEach(b=>b.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+
+/* 发音 */
 function speak(text){
-  if(!text) return;
+  if(!audioEnabled) return;
   speechSynthesis.cancel();
-  const u=new SpeechSynthesisUtterance(text);
-  u.lang=/[a-z]/i.test(text)?"en-US":"zh-CN";
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = /[a-z]/i.test(text) ? "en-US" : "zh-CN";
+  u.rate = rate;
   speechSynthesis.speak(u);
 }
 
-function show(){
-  a.style.display="none";
-  q.textContent = dir.value==="en2zh"
-    ? WORDS[i].en
-    : WORDS[i].zh;
+/* 出题 */
+function filterWords(){
+  const c = catSel.value;
+  words = c==="all" ? [...ALL_WORDS] : ALL_WORDS.filter(w=>w.cat===c);
+  i = 0;
+  show();
 }
 
-function reveal(know){
-  const right = dir.value==="en2zh"
-    ? WORDS[i].zh
-    : WORDS[i].en;
+function show(){
+  a.style.display = "none";
+  q.textContent = dir.value==="en2zh" ? words[i].en : words[i].zh;
+}
 
+function reveal(){
+  const right = dir.value==="en2zh" ? words[i].zh : words[i].en;
   a.textContent = right;
-  a.style.display="block";
+  a.style.display = "block";
   speak(right);
 }
 
 function next(){
-  i=(i+1)%WORDS.length;
+  i = (i + 1) % words.length;
   show();
 }
 
-document.getElementById("questionBox").onclick=()=>{
-  speak(q.textContent);
-};
-a.onclick=()=>speak(a.textContent);
-dir.onchange=show;
+document.getElementById("questionBox").onclick = ()=>speak(q.textContent);
+a.onclick = ()=>speak(a.textContent);
+dir.onchange = show;
+catSel.onchange = filterWords;
 
-show();
+filterWords();
 </script>
 </body>
 </html>
