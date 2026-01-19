@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b1220">
+<title>中英词汇自测（一年级版）</title>
+
+<style>
+:root{
+  --bg:#0b1220; --card:#111a2e; --muted:#9fb0d6;
+  --text:#eaf0ff; --border:#223255;
+  --ok:#35d07f; --bad:#ff5a6a;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+}
+.wrap{
+  max-width:720px;
+  margin:auto;
+  padding:env(safe-area-inset-top) 12px env(safe-area-inset-bottom);
+}
+.card{
+  background:var(--card);
+  border-radius:18px;
+  padding:18px;
+  margin-bottom:14px;
+}
+h1{font-size:20px;margin:0 0 6px;}
+.sub{font-size:13px;color:var(--muted);}
+
+.prompt{
+  margin-top:16px;
+  padding:22px;
+  border-radius:16px;
+  background:#0f1830;
+  text-align:center;
+  cursor:pointer;
+}
+.prompt .v{
+  font-size:32px;
+  font-weight:800;
+}
+.prompt:active{background:#1a2a52;}
+
+.answer{
+  margin-top:14px;
+  text-align:center;
+  font-size:26px;
+  font-weight:700;
+  display:none;
+  cursor:pointer;
+}
+
+button{
+  width:100%;
+  margin-top:12px;
+  font-size:18px;
+  padding:16px;
+  border-radius:14px;
+  border:none;
+  cursor:pointer;
+}
+.btn-know{ background:#2f7d4c; color:white; }
+.btn-dont{ background:#8a3a3a; color:white; }
+.btn-next{ background:#2b3f78; color:white; }
+
+button:active{opacity:.85;}
+</style>
+</head>
+
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>中英词汇自测</h1>
+    <div class="sub">一年级 · 不用打字 · 点击朗读</div>
+
+    <select id="direction" style="width:100%;margin-top:10px;">
+      <option value="en2zh">英 → 中</option>
+      <option value="zh2en">中 → 英</option>
+    </select>
+
+    <!-- 题目 -->
+    <div class="prompt" id="questionBox" title="点击朗读">
+      <div class="v" id="question">—</div>
+    </div>
+
+    <!-- 答案 -->
+    <div class="answer" id="answerBox" title="点击朗读答案"></div>
+
+    <!-- 判断按钮 -->
+    <button class="btn-know" onclick="reveal(true)">我知道 👍</button>
+    <button class="btn-dont" onclick="reveal(false)">我不知道 🤔</button>
+    <button class="btn-next" onclick="next()">下一题 ▶</button>
+  </div>
+</div>
+
+<script>
+const WORDS=[
+{en:"a banana",zh:"一根香蕉"},
+{en:"a peach",zh:"一个桃子"},
+{en:"a cherry",zh:"一颗樱桃"},
+{en:"a grape",zh:"一颗葡萄"},
+{en:"pink",zh:"粉色"},
+{en:"red",zh:"红色"},
+{en:"blue",zh:"蓝色"},
+{en:"green",zh:"绿色"},
+{en:"dance",zh:"跳舞"},
+{en:"sing",zh:"唱歌"},
+{en:"draw",zh:"画画"},
+{en:"cook",zh:"做饭"},
+{en:"dad",zh:"爸爸"},
+{en:"mum",zh:"妈妈"}
+];
+
+let i=0;
+const q=document.getElementById("question");
+const a=document.getElementById("answerBox");
+const dir=document.getElementById("direction");
+
+function speak(text){
+  if(!text) return;
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang=/[a-z]/i.test(text)?"en-US":"zh-CN";
+  speechSynthesis.speak(u);
+}
+
+function show(){
+  a.style.display="none";
+  q.textContent = dir.value==="en2zh"
+    ? WORDS[i].en
+    : WORDS[i].zh;
+}
+
+function reveal(know){
+  const right = dir.value==="en2zh"
+    ? WORDS[i].zh
+    : WORDS[i].en;
+
+  a.textContent = right;
+  a.style.display="block";
+  speak(right);
+}
+
+function next(){
+  i=(i+1)%WORDS.length;
+  show();
+}
+
+document.getElementById("questionBox").onclick=()=>{
+  speak(q.textContent);
+};
+a.onclick=()=>speak(a.textContent);
+dir.onchange=show;
+
+show();
+</script>
+</body>
+</html>
+
